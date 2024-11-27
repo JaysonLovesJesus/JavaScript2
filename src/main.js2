@@ -7,7 +7,7 @@ enum TokenKind {
   KK_LET,
   KK_CONST,
   KK_EXPORT,
-  KK_fn,
+  KK_FN,
   KK_IF,
   KK_ELSE,
   KK_WHILE,
@@ -57,7 +57,7 @@ enum TokenKind {
   NN_LET,
   NN_CONST,
   NN_EXPORT,
-  NN_fn,
+  NN_FN,
   NN_ENUM,
   NN_ENUM_ITEM,
   NN_ENUM_EXPRESSION,
@@ -185,7 +185,7 @@ fn isOperatorChar(ch) {
   );
 };
 fn isOperator(str) {
-  if (str.length == 1) {
+  if str.length == 1 {
     return (isOperatorChar(str));
   }
   return (
@@ -202,52 +202,52 @@ fn isOperator(str) {
 fn processToken(tokens, value, line, column) {
   let kind = .TT_UNKNOWN;
   // keywords
-  if (value == "enum") kind = .KK_ENUM;
-  else if (value == "let") kind = .KK_LET;
-  else if (value == "const") kind = .KK_CONST;
-  else if (value == "pub") kind = .KK_EXPORT;
-  else if (value == "fn") kind = .KK_fn;
-  else if (value == "if") kind = .KK_IF;
-  else if (value == "else") kind = .KK_ELSE;
-  else if (value == "while") kind = .KK_WHILE;
-  else if (value == "break") kind = .KK_BREAK;
-  else if (value == "continue") kind = .KK_CONTINUE;
-  else if (value == "return") kind = .KK_RETURN;
+  if value == "enum" kind = .KK_ENUM;
+  else if value == "let" kind = .KK_LET;
+  else if value == "const" kind = .KK_CONST;
+  else if value == "pub" kind = .KK_EXPORT;
+  else if value == "fn" kind = .KK_FN;
+  else if value == "if" kind = .KK_IF;
+  else if value == "else" kind = .KK_ELSE;
+  else if value == "while" kind = .KK_WHILE;
+  else if value == "break" kind = .KK_BREAK;
+  else if value == "continue" kind = .KK_CONTINUE;
+  else if value == "return" kind = .KK_RETURN;
   // boolean
-  else if (value == "true" || value == "false") kind = .TT_BOOLEAN;
+  else if value == "true" || value == "false" kind = .TT_BOOLEAN;
   // null
-  else if (value == "null") kind = .TT_NULL;
+  else if value == "null" kind = .TT_NULL;
   // punctuators
-  else if (value == "(") kind = .PP_LPAREN;
-  else if (value == ")") kind = .PP_RPAREN;
-  else if (value == "[") kind = .PP_LBRACK;
-  else if (value == "]") kind = .PP_RBRACK;
-  else if (value == "{") kind = .PP_LBRACE;
-  else if (value == "}") kind = .PP_RBRACE;
-  else if (value == ".") kind = .PP_DOT;
-  else if (value == ":") kind = .PP_COLON;
-  else if (value == ",") kind = .PP_COMMA;
-  else if (value == ";") kind = .PP_SEMIC;
+  else if value == "(" kind = .PP_LPAREN;
+  else if value == ")" kind = .PP_RPAREN;
+  else if value == "[" kind = .PP_LBRACK;
+  else if value == "]" kind = .PP_RBRACK;
+  else if value == "{" kind = .PP_LBRACE;
+  else if value == "}" kind = .PP_RBRACE;
+  else if value == "." kind = .PP_DOT;
+  else if value == ":" kind = .PP_COLON;
+  else if value == "," kind = .PP_COMMA;
+  else if value == ";" kind = .PP_SEMIC;
   // operators
-  else if (value == "!") kind = .OP_NOT;
-  else if (value == "=") kind = .OP_ASS;
-  else if (value == "+") kind = .OP_ADD;
-  else if (value == "-") kind = .OP_SUB;
-  else if (value == "*") kind = .OP_MUL;
-  else if (value == "/") kind = .OP_DIV;
-  else if (value == "<") kind = .OP_LT;
-  else if (value == "<=") kind = .OP_LTE;
-  else if (value == ">") kind = .OP_GT;
-  else if (value == ">=") kind = .OP_GTE;
-  else if (value == "|") kind = .OP_BIN_OR;
-  else if (value == "&") kind = .OP_BIN_AND;
-  else if (value == "==") kind = .OP_EQUAL;
-  else if (value == "!=") kind = .OP_NEQUAL;
-  else if (value == "||") kind = .OP_OR;
-  else if (value == "&&") kind = .OP_AND;
-  else if (value == "++") kind = .OP_ADD_ADD;
-  else if (value == "--") kind = .OP_SUB_SUB;
-  else if (value == "new") kind = .OP_NEW;
+  else if value == "!" kind = .OP_NOT;
+  else if value == "=" kind = .OP_ASS;
+  else if value == "+" kind = .OP_ADD;
+  else if value == "-" kind = .OP_SUB;
+  else if value == "*" kind = .OP_MUL;
+  else if value == "/" kind = .OP_DIV;
+  else if value == "<" kind = .OP_LT;
+  else if value == "<=" kind = .OP_LTE;
+  else if value == ">" kind = .OP_GT;
+  else if value == ">=" kind = .OP_GTE;
+  else if value == "|" kind = .OP_BIN_OR;
+  else if value == "&" kind = .OP_BIN_AND;
+  else if value == "==" kind = .OP_EQUAL;
+  else if value == "!=" kind = .OP_NEQUAL;
+  else if value == "||" kind = .OP_OR;
+  else if value == "&&" kind = .OP_AND;
+  else if value == "++" kind = .OP_ADD_ADD;
+  else if value == "--" kind = .OP_SUB_SUB;
+  else if value == "new" kind = .OP_NEW;
   else kind = .TT_IDENTIFIER;
   let token = createToken(kind, value, line, column-value.length);
   tokens.push(token);
@@ -279,10 +279,10 @@ fn scan(str) {
 
   // placed here to have correct context to next()
   fn processOperator(ch, second, line, column) {
-    if (second && isOperator(ch + second)) {
+    if second && isOperator(ch + second) {
       next();
       processToken(tokens, ch + second, line, column);
-    } else if (isOperator(ch)) {
+    } else if isOperator(ch) {
       processToken(tokens, ch, line, column);
     }
   };
@@ -292,19 +292,19 @@ fn scan(str) {
     let ch = str.charAt(ii);
     let cc = str.charCodeAt(ii);
     // blank
-    if (isBlank(cc)) {
+    if isBlank(cc) {
       continue;
     }
-    if (cc == 10) {
+    if cc == 10 {
       line++;
       column = 0;
       continue;
     }
     // alpha
-    if (isAlpha(cc)) {
+    if isAlpha(cc) {
       let start = ii;
       while (true) {
-        if (!isAlpha(cc) && !isNumber(cc)) {
+        if !isAlpha(cc && !isNumber(cc)) {
           ii--;
           column--;
           break;
@@ -317,10 +317,10 @@ fn scan(str) {
       continue;
     }
     // number
-    if (isNumber(cc) || cc == 45 && isNumber(str.charCodeAt(ii+1))) {
+    if isNumber(cc || cc == 45 && isNumber(str.charCodeAt(ii+1))) {
       let start = ii;
       while (true) {
-        if (!isNumber(cc) && cc != 45) {
+        if !isNumber(cc && cc != 45) {
           ii--;
           column--;
           break;
@@ -334,14 +334,14 @@ fn scan(str) {
       continue;
     }
     // string
-    if (isQuote(cc)) {
+    if isQuote(cc) {
       let start = ii;
       let begin = cc;
       while (true) {
         next();
         cc = str.charCodeAt(ii);
         // break on next matching quote
-        if (isQuote(cc) && cc == begin) {
+        if isQuote(cc && cc == begin) {
           break;
         }
       };
@@ -351,10 +351,10 @@ fn scan(str) {
       tokens.push(token);
       continue;
     }
-    if (ch == "/") {
-      if (str.charAt(ii + 1) == "/") {
+    if ch == "/" {
+      if str.charAt(ii + 1 == "/") {
         while (true) {
-          if (cc == 10) {
+          if cc == 10 {
             column = 0;
             line++;
             break;
@@ -365,18 +365,18 @@ fn scan(str) {
       }
       continue;
     }
-    if (isPunctuatorChar(ch)) {
+    if isPunctuatorChar(ch) {
       let content = str.slice(ii, ii+1);
       processToken(tokens, content, line, column);
       continue;
     }
-    if (isOperatorChar(ch)) {
+    if isOperatorChar(ch) {
       let second = str.slice(ii+1, ii+2);
       processOperator(ch, second, line, column);
       continue;
     }
 
-    if (ii >= length) {
+    if ii >= length {
       break;
     }
   };
@@ -391,15 +391,15 @@ fn Scope() {
   this.parent = null;
   this.symbols = {};
   this.resolve = fn(id) {
-    if (this.symbols[id]) {
-      // if (this.symbols[id].kind == .KK_CONST) {
+    if this.symbols[id] {
+      // if this.symbols[id].kind == .KK_CONST {
       //   return (this.symbols[id].token);
       // } else {
         return (this.symbols[id]);
       // }
     } else {
       // recursively search symbol inside parent
-      if (this.parent) {
+      if this.parent {
         return (this.parent.resolve(id));
       }
     }
@@ -417,7 +417,7 @@ fn pushScope(node) {
   scope = scp;
 };
 fn popScope() {
-  if (scope != null) {
+  if scope != null {
     scope = scope.parent;
   }
 };
@@ -447,19 +447,19 @@ fn next() {
   current = tokens[pindex];
 };
 fn expect(kind) {
-  if (current.kind != kind) {
+  if current.kind != kind {
     __imports.error("Expected " + kind + " but got " + current.kind + " in " + current.line + ":" + current.column);
   } else {
     next();
   }
 };
 fn expectIdentifier() {
-  if (current.kind != .TT_IDENTIFIER) {
+  if current.kind != .TT_IDENTIFIER {
     __imports.error("Expected " + .TT_IDENTIFIER + ":identifier but got " + current.kind + ":" + current.value);
   }
 };
 fn eat(kind) {
-  if (peek(kind)) {
+  if peek(kind) {
     next();
     return (true);
   }
@@ -468,35 +468,35 @@ fn eat(kind) {
 fn parseStatementList() {
   let list = [];
   while (true) {
-    if (!current) break;
-    if (peek(.PP_RBRACE)) break;
+    if !current break;
+    if peek(.PP_RBRACE) break;
     let node = parseStatement();
-    if (!node) break;
+    if !node break;
     list.push(node);
   };
   return (list);
 };
 fn parseStatement() {
   let node = null;
-  if (peek(.KK_LET)) {
+  if peek(.KK_LET) {
     node = parseVariableDeclaration(.NN_LET);
-  } else if (peek(.KK_CONST)) {
+  } else if peek(.KK_CONST) {
     node = parseVariableDeclaration(.NN_CONST);
-  } else if (peek(.KK_fn)) {
+  } else if peek(.KK_FN) {
     node = parsefnDeclaration();
-  } else if (peek(.KK_RETURN)) {
+  } else if peek(.KK_RETURN) {
     node = parseReturnStatement();
-  } else if (peek(.KK_IF)) {
+  } else if peek(.KK_IF) {
     node = parseIfStatement();
-  } else if (peek(.KK_WHILE)) {
+  } else if peek(.KK_WHILE) {
     node = parseWhileStatement();
-  } else if (peek(.KK_ENUM)) {
+  } else if peek(.KK_ENUM) {
     node = parseEnumDeclaration();
-  } else if (peek(.KK_EXPORT)) {
+  } else if peek(.KK_EXPORT) {
     node = parseExport();
   } else {
     node = parseExpression();
-    if (node == null) {
+    if node == null {
       __imports.error("Unknown node kind " + current.value + " in " + current.line + ":" + current.column);
     }
   }
@@ -509,7 +509,7 @@ fn parseExport() {
     kind: .NN_EXPORT,
     init: null
   };
-  if (peek(.KK_LET) || peek(.KK_CONST) || peek(.KK_fn)) {
+  if peek(.KK_LET) || peek(.KK_CONST) || peek(.KK_FN) {
     node.init = parseStatement();
   }
   return (node);
@@ -523,7 +523,7 @@ fn parseWhileStatement() {
   expect(.KK_WHILE);
   node.condition = parseExpression();
   // braced body
-  if (eat(.PP_LBRACE)) {
+  if eat(.PP_LBRACE) {
     pushScope(node);
     node.body = parseStatementList();
     popScope();
@@ -542,7 +542,7 @@ fn parseIfStatement() {
     consequent: null
   };
   // else
-  if (!eat(.KK_IF)) {
+  if !eat(.KK_IF) {
     pushScope(node);
     node.consequent = parseIfBody();
     popScope();
@@ -554,7 +554,7 @@ fn parseIfStatement() {
   pushScope(node);
   node.consequent = parseIfBody();
   popScope();
-  if (eat(.KK_ELSE)) {
+  if eat(.KK_ELSE) {
     node.alternate = parseIfStatement();
   }
   return (node);
@@ -562,7 +562,7 @@ fn parseIfStatement() {
 fn parseIfBody() {
   let node = null;
   // braced if
-  if (eat(.PP_LBRACE)) {
+  if eat(.PP_LBRACE) {
     node = parseStatementList();
     expect(.PP_RBRACE);
   // short if
@@ -582,20 +582,20 @@ fn parseReturnStatement() {
   return (node);
 };
 fn parsefnDeclaration() {
-  expect(.KK_fn);
+  expect(.KK_FN);
   let node = {
-    kind: .NN_fn,
+    kind: .NN_FN,
     id: null,
     parameter: null,
     body: null
   };
-  if (peek(.TT_IDENTIFIER)) {
+  if peek(.TT_IDENTIFIER) {
     node.id = current.value;
     scope.register(node.id, node);
     next();
   }
   node.parameter = parsefnParameters();
-  if (eat(.PP_LBRACE)) {
+  if eat(.PP_LBRACE) {
     pushScope(node);
     node.body = parseStatementList();
     popScope();
@@ -607,9 +607,9 @@ fn parsefnParameters() {
   let params = [];
   expect(.PP_LPAREN);
   while (true) {
-    if (peek(.PP_RPAREN)) break;
+    if peek(.PP_RPAREN) break;
     expectIdentifier();
-    if (current.value == "inout") {
+    if current.value == "inout" {
       next();
       expectIdentifier();
       current.isInout = true;
@@ -622,7 +622,7 @@ fn parsefnParameters() {
     param.isParameter = true;
     scope.register(param.value, param);
     next();
-    if (!eat(.PP_COMMA)) break;
+    if !eat(.PP_COMMA) break;
   };
   expect(.PP_RPAREN);
   return (params);
@@ -648,7 +648,7 @@ fn parseEnumExpression() {
   let member = null;
   let isShorty = eat(.PP_DOT);
   // shorty, try to auto resolve enum
-  if (isShorty) {
+  if isShorty {
     expectIdentifier();
     let nameToResolve = current.value;
     let cscope = scope;
@@ -659,11 +659,11 @@ fn parseEnumExpression() {
       while (kk < keys.length) {
         let key = keys[kk];
         let item = sym[key];
-        if (item.kind == .NN_ENUM) {
+        if item.kind == .NN_ENUM {
           let jj = 0;
           while (jj < item.body.length) {
             let child = item.body[jj];
-            if (child.name == nameToResolve) {
+            if child.name == nameToResolve {
               name = item.name;
               member = nameToResolve;
               // break all loops
@@ -687,12 +687,12 @@ fn parseEnumExpression() {
   };
   // unfold enum
   let resolve = scope.resolve(name);
-  if (resolve && resolve.kind == .NN_ENUM) {
+  if resolve && resolve.kind == .NN_ENUM {
     let ii = 0;
     let body = resolve.body;
     while (ii < body.length) {
       let child = body[ii];
-      if (child.name == member) {
+      if child.name == member {
         node.value = child.init;
         break;
       }
@@ -712,8 +712,8 @@ fn parseEnumBody() {
       init: null
     };
     next();
-    if (eat(.OP_ASS)) {
-      if (!isLiteral(current)) {
+    if eat(.OP_ASS) {
+      if !isLiteral(current) {
         __imports.error("Enum key " + node.name + " can only have numeric value");
       } else {
         node.init = parseLiteral();
@@ -724,14 +724,14 @@ fn parseEnumBody() {
     }
     scope.register(node.name, node);
     keys.push(node);
-    if (!eat(.PP_COMMA)) break;
+    if !eat(.PP_COMMA) break;
   };
   return (keys);
 };
 fn parseLetDeclaration() {
     next();
     let mut = false;
-    if (peek(.KK_MUT)) {
+    if peek(.KK_MUT) {
         mut = true;
     }
     expectIdentifier();
@@ -768,13 +768,13 @@ fn parseMemberExpression(parent) {
     parent: parent,
     member: parseExpression()
   };
-  if (node.parent.kind == .NN_LITERAL && node.member.kind == .NN_LITERAL) {
+  if node.parent.kind == .NN_LITERAL && node.member.kind == .NN_LITERAL {
     let resolve = scope.resolve(node.parent.value);
-    if (resolve && resolve.kind == .NN_ENUM) {
+    if resolve && resolve.kind == .NN_ENUM {
       let ii = 0;
       while (ii < resolve.body.length) {
         let child = resolve.body[ii];
-        if (node.member.value == child.name) {
+        if node.member.value == child.name {
           node = {
             kind: .NN_ENUM_EXPRESSION,
             value: child.init
@@ -804,23 +804,23 @@ fn parseCallExpression(id) {
     parameter: parseCallParameters()
   };
   let resolve = scope.resolve(id.value);
-  if (resolve && resolve.kind == .NN_fn) {
+  if resolve && resolve.kind == .NN_FN {
     let params = resolve.parameter;
     let idx = 0;
     params.map(fn(item) {
       let param = node.parameter[idx];
       let loc = id.value + "::" + param.value;
-      if (item.isInout) {
-        if (param.kind != .NN_LITERAL) {
+      if item.isInout {
+        if param.kind != .NN_LITERAL {
           __imports.error("fn " + loc + " is inout and only accepts literals");
         } else {
           // now try to trace the variable declaration location as a later pointer
           let resolve = scope.resolve(param.value);
-          if (resolve.kind != .NN_LET) {
+          if resolve.kind != .NN_LET {
             __imports.error("Passing by reference in " + loc + " only accepts variables right now");
           } else {
             // trace as later reference
-            if (!resolve.isLaterReference) {
+            if !resolve.isLaterReference {
               resolve.isLaterReference = true;
             }
           }
@@ -835,10 +835,10 @@ fn parseCallParameters() {
   let params = [];
   expect(.PP_LPAREN);
   while (true) {
-    if (peek(.PP_RPAREN)) break;
+    if peek(.PP_RPAREN) break;
     let expr = parseExpression();
     params.push(expr);
-    if (!eat(.PP_COMMA)) break;
+    if !eat(.PP_COMMA) break;
   };
   expect(.PP_RPAREN);
   return (params);
@@ -864,7 +864,7 @@ fn parseObjectExpression() {
   };
   expect(.PP_LBRACE);
   while (true) {
-    if (peek(.PP_RBRACE)) break;
+    if peek(.PP_RBRACE) break;
     let property = {
       kind: .NN_OBJECT_PROPERTY,
       id: parseLiteral(),
@@ -873,7 +873,7 @@ fn parseObjectExpression() {
     expect(.PP_COLON);
     property.value = parseExpression();
     node.properties.push(property);
-    if (!eat(.PP_COMMA)) break;
+    if !eat(.PP_COMMA) break;
   };
   expect(.PP_RBRACE);
   return (node);
@@ -909,39 +909,39 @@ fn parseBinaryExpression(left) {
   return (node);
 };
 fn parseInfix(left) {
-  if (isBinaryOperator(current)) {
+  if isBinaryOperator(current) {
     return (parseBinaryExpression(left));
   }
-  if (isUnaryPostfixOperator(current)) {
+  if isUnaryPostfixOperator(current) {
     return (parseUnaryPostfixExpression(left));
   }
-  if (peek(.PP_LPAREN)) {
+  if peek(.PP_LPAREN) {
     return (parseCallExpression(left));
   }
-  if (peek(.PP_DOT)) {
+  if peek(.PP_DOT) {
     return (parseMemberExpression(left));
   }
-  if (peek(.PP_LBRACK)) {
+  if peek(.PP_LBRACK) {
     return (parseComputedMemberExpression(left));
   }
   return (left);
 };
 fn parsePrefix() {
-  if (isLiteral(current)) {
+  if isLiteral(current) {
     return (parseLiteral());
   }
-  if (peek(.PP_LBRACE)) {
+  if peek(.PP_LBRACE) {
     return (parseObjectExpression());
   }
-  if (peek(.PP_LBRACK)) {
+  if peek(.PP_LBRACK) {
     return (parseArrayExpression());
   }
-  if (eat(.PP_LPAREN)) {
+  if eat(.PP_LPAREN) {
     let node = parseExpression();
     expect(.PP_RPAREN);
     return (node);
   }
-  if (isUnaryPrefixOperator(current)) {
+  if isUnaryPrefixOperator(current) {
     return (parseUnaryPrefixExpression());
   }
   return (parseStatement());
@@ -953,38 +953,38 @@ fn parseArrayExpression() {
     elements: []
   };
   while (true) {
-    if (peek(.PP_RBRACK)) break;
+    if peek(.PP_RBRACK) break;
     let element = {
       kind: .NN_ARRAY_ELEMENT,
       value: parseExpression()
     };
     node.elements.push(element);
-    if (!eat(.PP_COMMA)) break;
+    if !eat(.PP_COMMA) break;
   };
   expect(.PP_RBRACK);
   return (node);
 };
 fn parseExpression() {
-  if (peek(.KK_BREAK)) {
+  if peek(.KK_BREAK) {
     return (parseBreak());
   }
-  if (peek(.KK_CONTINUE)) {
+  if peek(.KK_CONTINUE) {
     return (parseContinue());
   }
-  if (peek(.PP_DOT)) {
+  if peek(.PP_DOT) {
     return (parseEnumExpression());
   }
   let node = parsePrefix();
   while (true) {
-    if (!current) break;
+    if !current break;
     let expr = parseInfix(node);
-    if (expr == null || expr == node) break;
+    if expr == null || expr == node break;
     node = expr;
   };
   return (node);
 };
 fn parseLiteral() {
-  if (peek(.TT_STRING)) {
+  if peek(.TT_STRING) {
     return (parseStringLiteral());
   }
   let node = {
@@ -1026,15 +1026,15 @@ fn generateBody(body) {
 };
 fn generateNode(node) {
   let kind = node.kind;
-  if (kind == .NN_fn) {
+  if kind == .NN_FN {
     write("fn ");
-    if (node.id) write(node.id);
+    if node.id write(node.id);
     write("(");
     let ii = 0;
     pushScope(node);
     while (ii < node.parameter.length) {
       write(node.parameter[ii].value);
-      if (ii + 1 < node.parameter.length) {
+      if ii + 1 < node.parameter.length {
         write(", ");
       }
       ii++;
@@ -1045,33 +1045,33 @@ fn generateNode(node) {
     write(" } ");
     popScope();
   }
-  else if (kind == .NN_LET) {
+  else if kind == .NN_LET {
     let isLaterReference = node.isLaterReference;
-    if (node.mut) {
+    if node.mut {
         write("let ");
     } else {
         write("const ");
     }
     write(node.id);
     write(" = ");
-    if (isLaterReference) {
+    if isLaterReference {
       write("{");
       write("$iov:");
     }
     generateNode(node.init);
-    if (isLaterReference) {
+    if isLaterReference {
       write("}");
     }
   }
-  else if (kind == .NN_CONST) {
+  else if kind == .NN_CONST {
     write("const ");
     write(node.id);
     write(" = ");
     generateNode(node.init);
   }
-  else if (kind == .NN_IF) {
-    if (node.condition) {
-      write("if (");
+  else if kind == .NN_IF {
+    if node.condition {
+      write("if ");
       generateNode(node.condition);
       write(")");
     }
@@ -1080,19 +1080,19 @@ fn generateNode(node) {
     generateBody(node.consequent);
     popScope();
     write(" } ");
-    if (node.alternate) {
+    if node.alternate {
       write("else ");
       pushScope(node.alternate);
       generateNode(node.alternate);
       popScope();
     }
   }
-  else if (kind == .NN_RETURN) {
+  else if kind == .NN_RETURN {
     write("return (");
     generateNode(node.argument);
     write(")");
   }
-  else if (kind == .NN_WHILE) {
+  else if kind == .NN_WHILE {
     write("while ");
     write("(");
     generateNode(node.condition);
@@ -1103,15 +1103,15 @@ fn generateNode(node) {
     write(" } ");
     popScope();
   }
-  else if (kind == .NN_BREAK) {
+  else if kind == .NN_BREAK {
     write("break");
     write("");
   }
-  else if (kind == .NN_CONTINUE) {
+  else if kind == .NN_CONTINUE {
     write("continue");
     write("");
   }
-  else if (kind == .NN_CALL_EXPRESSION) {
+  else if kind == .NN_CALL_EXPRESSION {
     let callee = node.callee;
     let resolve = scope.resolve(callee.value);
     generateNode(callee);
@@ -1119,24 +1119,24 @@ fn generateNode(node) {
     let ii = 0;
     while (ii < node.parameter.length) {
       // pass identifier by reference
-      if (resolve && resolve.parameter[ii].isInout) {
+      if resolve && resolve.parameter[ii].isInout {
         write(node.parameter[ii].value);
       } else {
         generateNode(node.parameter[ii]);
       }
-      if (ii + 1 < node.parameter.length) {
+      if ii + 1 < node.parameter.length {
         write(", ");
       }
       ii++;
     };
     write(")");
   }
-  else if (kind == .NN_BINARY_EXPRESSION) {
+  else if kind == .NN_BINARY_EXPRESSION {
     generateNode(node.left);
-    if (node.operator == "==") {
+    if node.operator == "==" {
       write(" === ");
     }
-    else if (node.operator == "!=") {
+    else if node.operator == "!=" {
       write(" !== ");
     }
     else {
@@ -1144,30 +1144,30 @@ fn generateNode(node) {
     }
     generateNode(node.right);
   }
-  else if (kind == .NN_MEMBER_EXPRESSION) {
+  else if kind == .NN_MEMBER_EXPRESSION {
     generateNode(node.parent);
     write(".");
     generateNode(node.member);
   }
-  else if (kind == .NN_COMPUTED_MEMBER_EXPRESSION) {
+  else if kind == .NN_COMPUTED_MEMBER_EXPRESSION {
     generateNode(node.parent);
     write("[");
     generateNode(node.member);
     write("]");
   }
-  else if (kind == .NN_UNARY_PREFIX_EXPRESSION) {
-    if (node.operator == "new") {
+  else if kind == .NN_UNARY_PREFIX_EXPRESSION {
+    if node.operator == "new" {
       write(node.operator);
       write(" ");
     }
     else write(node.operator);
     generateNode(node.value);
   }
-  else if (kind == .NN_UNARY_POSTFIX_EXPRESSION) {
+  else if kind == .NN_UNARY_POSTFIX_EXPRESSION {
     generateNode(node.value);
     write(node.operator);
   }
-  else if (kind == .NN_OBJECT_EXPRESSION) {
+  else if kind == .NN_OBJECT_EXPRESSION {
     write("{");
     let ii = 0;
     while (ii < node.properties.length) {
@@ -1175,62 +1175,62 @@ fn generateNode(node) {
       generateNode(property.id);
       write(": ");
       generateNode(property.value);
-      if (ii + 1 < node.properties.length) {
+      if ii + 1 < node.properties.length {
         write(", ");
       }
       ii++;
     };
     write(" }");
   }
-  else if (kind == .NN_ARRAY_EXPRESSION) {
+  else if kind == .NN_ARRAY_EXPRESSION {
     write("[");
     let ii = 0;
     while (ii < node.elements.length) {
       let element = node.elements[ii];
       generateNode(element.value);
-      if (ii + 1 < node.elements.length) {
+      if ii + 1 < node.elements.length {
         write(", ");
       }
       ii++;
     };
     write("]");
   }
-  else if (kind == .NN_LITERAL) {
+  else if kind == .NN_LITERAL {
     let resolve = scope.resolve(node.value);
     write(node.value);
-    if (resolve) {
-      if (resolve.isLaterReference) {
+    if resolve {
+      if resolve.isLaterReference {
         write(".$iov");
       }
-      else if (resolve.isParameter && resolve.isInout) {
+      else if resolve.isParameter && resolve.isInout {
         write(".$iov");
       }
     }
   }
-  else if (kind == .NN_STRING_LITERAL) {
+  else if kind == .NN_STRING_LITERAL {
     let isChar = node.isChar;
-    if (isChar) write('"');
+    if isChar write('"');
     else write("'");
     write(node.value);
-    if (isChar) write('"');
+    if isChar write('"');
     else write("'");
   }
-  else if (kind == .NN_EXPORT) {
+  else if kind == .NN_EXPORT {
     let init = node.init;
     write("export ");
     // write(init.id);
     // write(" = ");
-    if (init.kind == .NN_fn) {
+    if init.kind == .NN_FN {
       generateNode(init);
     }
-    else if (init.kind == .NN_LET || init.kind == .NN_CONST) {
+    else if init.kind == .NN_LET || init.kind == .NN_CONST {
       generateNode(init.init);
     }
     else {
       __imports.error("Cannot export node kind " + init.kind + "!");
     }
   }
-  else if (kind == .NN_ENUM) {
+  else if kind == .NN_ENUM {
     let name = node.name;
     let body = node.body;
     write("var ");
@@ -1263,7 +1263,7 @@ fn generateNode(node) {
     write(" = {})");
     write(")");
   }
-  else if (kind == .NN_ENUM_EXPRESSION) {
+  else if kind == .NN_ENUM_EXPRESSION {
     write(node.value.value);
   }
   else {
