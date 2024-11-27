@@ -280,7 +280,6 @@ function createToken(kind, value, line, column) {
 };
 
 function scan(str) {
-
   let ii = -1;
   let line = 1;
   let column = 0;
@@ -516,7 +515,7 @@ function parseStatement() {
   } else if (peek(.KK_WHILE)) {
     node = parseWhileStatement();
   } else if (peek(.KK_ENUM)) {
-    node = parseEnumDeclaration();  
+    node = parseEnumDeclaration();
   } else if (peek(.KK_EXPORT)) {
     node = parseExport();
   } else {
