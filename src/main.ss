@@ -1,0 +1,1266 @@
+enum TokenKind {
+	TK_UNKNOWN,
+
+	// Keywords
+	KW_ENUM,
+	KW_LET,
+	KW_MUT,
+	KW_CONST,
+	KW_EXPORT,
+	KW_FN,
+	KW_IF,
+	KW_ELSE,
+	KW_WHILE,
+	KW_BREAK,
+	KW_CONTINUE,
+	KW_RETURN,
+
+	// Punctuators
+	PP_LPAREN,
+	PP_RPAREN,
+	PP_LBRACK,
+	PP_RBRACK,
+	PP_LBRACE,
+	PP_RBRACE,
+	PP_DOT,
+	PP_COLON,
+	PP_COMMA,
+	PP_SEMIC,
+
+	// Operators
+	OP_ASS,
+	OP_ADD,
+	OP_SUB,
+	OP_MUL,
+	OP_DIV,
+	OP_NEW,
+	OP_OR,
+	OP_AND,
+	OP_NOT,
+	OP_LT,
+	OP_LTE,
+	OP_GT,
+	OP_GTE,
+	OP_EQUAL,
+	OP_NEQUAL,
+	OP_BIN_OR,
+	OP_BIN_AND,
+	OP_ADD_ADD,
+	OP_SUB_SUB,
+
+	// Token Types
+	TT_NUM,
+	TT_BOOL,
+
+	// Token Kinds
+	TK_NULL,
+	TK_STRING,
+	TK_NUMBER,
+	TK_BOOLEAN,
+	TK_IDENTIFIER,
+
+	// Node Kinds
+	NK_PROGRAM,
+	NK_IF,
+	NK_LET,
+	NK_CONST,
+	NK_EXPORT,
+	NK_FN,
+	NK_ENUM,
+	NK_ENUM_ITEM,
+	NK_ENUM_EXPRESSION,
+	NK_UNARY_PREFIX_EXPRESSION,
+	NK_UNARY_POSTFIX_EXPRESSION,
+	NK_BINARY_EXPRESSION,
+	NK_MEMBER_EXPRESSION,
+	NK_COMPUTED_MEMBER_EXPRESSION,
+	NK_OBJECT_EXPRESSION,
+	NK_OBJECT_PROPERTY,
+	NK_ARRAY_EXPRESSION,
+	NK_ARRAY_ELEMENT,
+	NK_CALL_EXPRESSION,
+	NK_WHILE,
+	NK_RETURN,
+	NK_BREAK,
+	NK_CONTINUE,
+	NK_LITERAL,
+	NK_STRING_LITERAL,
+	NK_INOUT
+};
+
+// ## Helper Functions ##
+fn is_blank(cc) {
+	return (
+		cc == 9 ||
+		cc == 11 ||
+		cc == 12 ||
+		cc == 32 ||
+		cc == 160
+	);
+};
+fn is_quote(cc) {
+	return (
+		cc == 39 ||
+		cc == 34
+	);
+};
+fn is_alpha(cc) {
+	return (
+		cc >= 65 && cc <= 90 ||
+		cc >= 97 && cc <= 122 ||
+		cc == 95
+	);
+};
+fn is_number(cc) {
+	return (
+		cc >= 48 && cc <= 57
+	);
+};
+fn is_binary_operator(token) {
+	let mut kind = token.kind;
+	return (
+		(kind == TokenKind.OP_ASS ||
+		kind == TokenKind.OP_ADD ||
+		kind == TokenKind.OP_SUB ||
+		kind == TokenKind.OP_MUL ||
+		kind == TokenKind.OP_DIV ||
+		kind == TokenKind.OP_OR ||
+		kind == TokenKind.OP_AND ||
+		kind == TokenKind.OP_NOT ||
+		kind == TokenKind.OP_LT ||
+		kind == TokenKind.OP_LTE ||
+		kind == TokenKind.OP_GT ||
+		kind == TokenKind.OP_GTE ||
+		kind == TokenKind.OP_EQUAL ||
+		kind == TokenKind.OP_NEQUAL ||
+		kind == TokenKind.OP_BIN_OR ||
+		kind == TokenKind.OP_BIN_AND) &&
+		!is_unary_prefix_operator(token)
+	);
+};
+fn is_unary_prefix_operator(token) {
+	let mut kind = token.kind;
+	return (
+		kind == TokenKind.OP_NEW ||
+		kind == TokenKind.OP_NOT ||
+		kind == TokenKind.OP_ADD_ADD ||
+		kind == TokenKind.OP_SUB_SUB
+	);
+};
+fn is_unary_postfix_operator(token) {
+	let mut kind = token.kind;
+	return (
+		kind == TokenKind.OP_ADD_ADD ||
+		kind == TokenKind.OP_SUB_SUB
+	);
+};
+fn is_literal(token) {
+	let mut kind = token.kind;
+	return (
+		kind == TokenKind.TK_NULL ||
+		kind == TokenKind.TK_STRING ||
+		kind == TokenKind.TK_NUMBER ||
+		kind == TokenKind.TK_BOOLEAN ||
+		kind == TokenKind.TK_IDENTIFIER
+	);
+};
+fn is_punctuator_char(ch) {
+	return (
+		ch == "(" ||
+		ch == ")" ||
+		ch == "[" ||
+		ch == "]" ||
+		ch == "{" ||
+		ch == "}" ||
+		ch == "." ||
+		ch == ":" ||
+		ch == "," ||
+		ch == ";" ||
+		ch == "*" ||
+		ch == "/"
+	);
+};
+fn is_operator_char(ch) {
+	return (
+		ch == "+" ||
+		ch == "-" ||
+		ch == "!" ||
+		ch == "=" ||
+		ch == "|" ||
+		ch == "&" ||
+		ch == ">" ||
+		ch == "<"
+	);
+};
+fn is_operator(str) {
+	if str.length == 1 {
+		return (is_operator_char(str));
+	}
+	return (
+		str == "++" ||
+		str == "--" ||
+		str == "==" ||
+		str == "!=" ||
+		str == "||" ||
+		str == "&&" ||
+		str == ">=" ||
+		str == "<="
+	);
+};
+fn process_token(tokens, value, line, column) {
+	let mut kind = TokenKind.TK_UNKNOWN;
+	// keywords
+	if value == "enum" kind = TokenKind.KW_ENUM;
+	else if value == "let" kind = TokenKind.KW_LET;
+	else if value == "mut" kind = TokenKind.KW_MUT;
+	else if value == "const" kind = TokenKind.KW_CONST;
+	else if value == "pub" kind = TokenKind.KW_EXPORT;
+	else if value == "fn" kind = TokenKind.KW_FN;
+	else if value == "if" kind = TokenKind.KW_IF;
+	else if value == "else" kind = TokenKind.KW_ELSE;
+	else if value == "while" kind = TokenKind.KW_WHILE;
+	else if value == "break" kind = TokenKind.KW_BREAK;
+	else if value == "continue" kind = TokenKind.KW_CONTINUE;
+	else if value == "return" kind = TokenKind.KW_RETURN;
+	// boolean
+	else if value == "true" || value == "false" kind = TokenKind.TK_BOOLEAN;
+	// null
+	else if value == "null" kind = TokenKind.TK_NULL;
+	// punctuators
+	else if value == "(" kind = TokenKind.PP_LPAREN;
+	else if value == ")" kind = TokenKind.PP_RPAREN;
+	else if value == "[" kind = TokenKind.PP_LBRACK;
+	else if value == "]" kind = TokenKind.PP_RBRACK;
+	else if value == "{" kind = TokenKind.PP_LBRACE;
+	else if value == "}" kind = TokenKind.PP_RBRACE;
+	else if value == "." kind = TokenKind.PP_DOT;
+	else if value == ":" kind = TokenKind.PP_COLON;
+	else if value == "," kind = TokenKind.PP_COMMA;
+	else if value == ";" kind = TokenKind.PP_SEMIC;
+	// operators
+	else if value == "!" kind = TokenKind.OP_NOT;
+	else if value == "=" kind = TokenKind.OP_ASS;
+	else if value == "+" kind = TokenKind.OP_ADD;
+	else if value == "-" kind = TokenKind.OP_SUB;
+	else if value == "*" kind = TokenKind.OP_MUL;
+	else if value == "/" kind = TokenKind.OP_DIV;
+	else if value == "<" kind = TokenKind.OP_LT;
+	else if value == "<=" kind = TokenKind.OP_LTE;
+	else if value == ">" kind = TokenKind.OP_GT;
+	else if value == ">=" kind = TokenKind.OP_GTE;
+	else if value == "|" kind = TokenKind.OP_BIN_OR;
+	else if value == "&" kind = TokenKind.OP_BIN_AND;
+	else if value == "==" kind = TokenKind.OP_EQUAL;
+	else if value == "!=" kind = TokenKind.OP_NEQUAL;
+	else if value == "||" kind = TokenKind.OP_OR;
+	else if value == "&&" kind = TokenKind.OP_AND;
+	else if value == "++" kind = TokenKind.OP_ADD_ADD;
+	else if value == "--" kind = TokenKind.OP_SUB_SUB;
+	else if value == "new" kind = TokenKind.OP_NEW;
+	else kind = TokenKind.TK_IDENTIFIER;
+	let mut token = create_token(kind, value, line, column-value.length);
+	tokens.push(token);
+	return (token);
+};
+
+// ## SCANNER ##
+fn create_token(kind, value, line, column) {
+	let mut token = {
+		kind: kind,
+		value: value,
+		line: line,
+		column: column
+	};
+	return (token);
+};
+fn scan(str) {
+	let mut ii = -1;
+	let mut line = 1;
+	let mut column = 0;
+	let mut length = str.length;
+
+	let mut tokens = [];
+
+	fn next() {
+		ii++;
+		column++;
+	};
+
+	// placed here to have correct context to next()
+	fn process_operator(ch, second, line, column) {
+		if second && is_operator(ch + second) {
+			next();
+			process_token(tokens, ch + second, line, column);
+		} else if is_operator(ch) {
+			process_token(tokens, ch, line, column);
+		}
+	};
+
+	while (true) {
+		next();
+		let mut ch = str.char_at(ii);
+		let mut cc = str.char_code_at(ii);
+		// blank
+		if is_blank(cc) {
+			continue;
+		}
+		if cc == 10 {
+			line++;
+			column = 0;
+			continue;
+		}
+		// alpha
+		if is_alpha(cc) {
+			let mut start = ii;
+			while (true) {
+				if !is_alpha(cc) && !is_number(cc) {
+					ii--;
+					column--;
+					break;
+				}
+				next();
+				cc = str.char_code_at(ii);
+			};
+			let mut content = str.slice(start, ii+1);
+			process_token(tokens, content, line, column);
+			continue;
+		}
+		// number
+		if is_number(cc) || cc == 45 && is_number(str.char_code_at(ii+1)) {
+			let mut start = ii;
+			while (true) {
+				if !is_number(cc) && cc != 45 {
+					ii--;
+					column--;
+					break;
+				}
+				next();
+				cc = str.char_code_at(ii);
+			};
+			let mut content = str.slice(start, ii+1);
+			let mut token = create_token(TokenKind.TK_NUMBER, content, line, column);
+			tokens.push(token);
+			continue;
+		}
+		// string
+		if is_quote(cc) {
+			let mut start = ii;
+			let mut begin = cc;
+			while (true) {
+				next();
+				cc = str.char_code_at(ii);
+				// break on next matching quote
+				if is_quote(cc) && cc == begin {
+					break;
+				}
+			};
+			let mut content = str.slice(start+1, ii);
+			let mut token = create_token(TokenKind.TK_STRING, content, line, column);
+			token.is_char = content[0] == "'";
+			tokens.push(token);
+			continue;
+		}
+		if ch == "/" {
+			if str.char_at(ii + 1 == "/") {
+				while (true) {
+					if cc == 10 {
+						column = 0;
+						line++;
+						break;
+					}
+					next();
+					cc = str.char_code_at(ii);
+				};
+			}
+			continue;
+		}
+		if is_punctuator_char(ch) {
+			let mut content = str.slice(ii, ii+1);
+			process_token(tokens, content, line, column);
+			continue;
+		}
+		if is_operator_char(ch) {
+			let mut second = str.slice(ii+1, ii+2);
+			process_operator(ch, second, line, column);
+			continue;
+		}
+
+		if ii >= length {
+			break;
+		}
+	};
+
+	return (tokens);
+};
+
+// ## SCOPE ##
+let mut scope = null;
+fn Scope() {
+	this.node = null;
+	this.parent = null;
+	this.symbols = {};
+	this.resolve = fn(id) {
+		if this.symbols[id] {
+			// if this.symbols[id].kind == TokenKind.KW_CONST {
+			//	 return (this.symbols[id].token);
+			// } else {
+				return (this.symbols[id]);
+			// }
+		} else {
+			// recursively search symbol inside parent
+			if this.parent {
+				return (this.parent.resolve(id));
+			}
+		}
+		return (null);
+	};
+	this.register = fn(id, node) {
+		this.symbols[id] = node;
+	};
+};
+fn push_scope(node) {
+	let mut scp = new Scope();
+	scp.node = node;
+	scp.parent = scope;
+	node.context = scp;
+	scope = scp;
+};
+fn pop_scope() {
+	if scope != null {
+		scope = scope.parent;
+	}
+};
+
+// ## PARSER ##
+let mut pindex = 0;
+let mut tokens = null;
+let mut current = null;
+
+fn parse(tkns) {
+	tokens = tkns;
+	pindex = -1;
+	next();
+	let mut node = {
+		kind: TokenKind.NK_PROGRAM,
+		body: null
+	};
+	push_scope(node);
+	node.body = parse_statement_list();
+	return (node);
+};
+fn peek(kind) {
+	return (current && current.kind == kind);
+};
+fn next() {
+	pindex++;
+	current = tokens[pindex];
+};
+fn expect(kind) {
+	if current.kind != kind {
+		__imports.error("Expected " + kind + " but got " + current.kind + " in " + current.line + ":" + current.column);
+	} else {
+		next();
+	}
+};
+fn expect_identifier() {
+	if current.kind != TokenKind.TK_IDENTIFIER {
+		__imports.error("Expected " + TokenKind.TK_IDENTIFIER + ":identifier but got " + current.kind + ":" + current.value);
+	}
+};
+fn eat(kind) {
+	if peek(kind) {
+		next();
+		return (true);
+	}
+	return (false);
+};
+fn parse_statement_list() {
+	let mut list = [];
+	while (true) {
+		if !current break;
+		if peek(TokenKind.PP_RBRACE) break;
+		let mut node = parse_statement();
+		if !node break;
+		list.push(node);
+	};
+	return (list);
+};
+fn parse_statement() {
+	let mut node = null;
+	if peek(TokenKind.KW_LET) {
+		node = parse_let_declaration(TokenKind.NK_LET);
+	} else if peek(TokenKind.KW_CONST) {
+		node = parse_const_declaration(TokenKind.NK_CONST);
+	} else if peek(TokenKind.KW_FN) {
+		node = parsefn_declaration();
+	} else if peek(TokenKind.KW_RETURN) {
+		node = parse_return_statement();
+	} else if peek(TokenKind.KW_IF) {
+		node = parse_if_statement();
+	} else if peek(TokenKind.KW_WHILE) {
+		node = parse_while_statement();
+	} else if peek(TokenKind.KW_ENUM) {
+		node = parse_enum_declaration();
+	} else if peek(TokenKind.KW_EXPORT) {
+		node = parse_export();
+	} else {
+		node = parse_expression();
+		if node == null {
+			__imports.error("Unknown node kind " + current.value + " in " + current.line + ":" + current.column);
+		}
+	}
+	eat(TokenKind.PP_SEMIC);
+	return (node);
+};
+fn parse_export() {
+	expect(TokenKind.KW_EXPORT);
+	let mut node = {
+		kind: TokenKind.NK_EXPORT,
+		init: null
+	};
+	if peek(TokenKind.KW_LET) || peek(TokenKind.KW_CONST) || peek(TokenKind.KW_FN) {
+		node.init = parse_statement();
+	}
+	return (node);
+};
+fn parse_while_statement() {
+	let mut node = {
+		kind: TokenKind.NK_WHILE,
+		condition: null,
+		body: null
+	};
+	expect(TokenKind.KW_WHILE);
+	node.condition = parse_expression();
+	// braced body
+	if eat(TokenKind.PP_LBRACE) {
+		push_scope(node);
+		node.body = parse_statement_list();
+		pop_scope();
+		expect(TokenKind.PP_RBRACE);
+	// short body
+	} else {
+		node.body = parse_expression();
+	}
+	return (node);
+};
+fn parse_if_statement() {
+	let mut node = {
+		kind: TokenKind.NK_IF,
+		condition: null,
+		alternate: null,
+		consequent: null
+	};
+	// else
+	if !eat(TokenKind.KW_IF) {
+		push_scope(node);
+		node.consequent = parse_if_body();
+		pop_scope();
+		return (node);
+	}
+	// expect(TokenKind.PP_LPAREN);
+	node.condition = parse_expression();
+	// expect(TokenKind.PP_RPAREN);
+	push_scope(node);
+	node.consequent = parse_if_body();
+	pop_scope();
+	if eat(TokenKind.KW_ELSE) {
+		node.alternate = parse_if_statement();
+	}
+	return (node);
+};
+fn parse_if_body() {
+	let mut node = null;
+	// braced if
+	if eat(TokenKind.PP_LBRACE) {
+		node = parse_statement_list();
+		expect(TokenKind.PP_RBRACE);
+	// short if
+	} else {
+		node = [];
+		node.push(parse_expression());
+		eat(TokenKind.PP_SEMIC);
+	}
+	return (node);
+};
+fn parse_return_statement() {
+	expect(TokenKind.KW_RETURN);
+	let mut node = {
+		kind: TokenKind.NK_RETURN,
+		argument: parse_expression()
+	};
+	return (node);
+};
+fn parsefn_declaration() {
+	expect(TokenKind.KW_FN);
+	let mut node = {
+		kind: TokenKind.NK_FN,
+		id: null,
+		parameter: null,
+		body: null
+	};
+	if peek(TokenKind.TK_IDENTIFIER) {
+		node.id = current.value;
+		scope.register(node.id, node);
+		next();
+	}
+	node.parameter = parsefn_parameters();
+	if eat(TokenKind.PP_LBRACE) {
+		push_scope(node);
+		node.body = parse_statement_list();
+		pop_scope();
+		expect(TokenKind.PP_RBRACE);
+	}
+	return (node);
+};
+fn parsefn_parameters() {
+	let mut params = [];
+	expect(TokenKind.PP_LPAREN);
+	while (true) {
+		if peek(TokenKind.PP_RPAREN) break;
+		expect_identifier();
+		if current.value == "inout" {
+			next();
+			expect_identifier();
+			current.is_inout = true;
+			params.push(current);
+		} else {
+			current.is_inout = false;
+			params.push(current);
+		}
+		let mut param = params[params.length - 1];
+		param.is_parameter = true;
+		scope.register(param.value, param);
+		next();
+		if !eat(TokenKind.PP_COMMA) break;
+	};
+	expect(TokenKind.PP_RPAREN);
+	return (params);
+};
+fn parse_enum_declaration() {
+	expect(TokenKind.KW_ENUM);
+	let mut node = {
+		kind: TokenKind.NK_ENUM,
+		name: null,
+		body: null
+	};
+	expect_identifier();
+	node.name = current.value;
+	scope.register(node.name, node);
+	next();
+	expect(TokenKind.PP_LBRACE);
+	node.body = parse_enum_body();
+	expect(TokenKind.PP_RBRACE);
+	return (node);
+};
+fn parse_enum_expression() {
+	let mut name = null;
+	let mut member = null;
+	let mut is_shorty = eat(TokenKind.PP_DOT);
+	// shorty, try to auto resolve enum
+	if is_shorty {
+		expect_identifier();
+		let mut name_to_resolve = current.value;
+		let mut cscope = scope;
+		while (cscope != null) {
+			let mut sym = cscope.symbols;
+			let mut keys = Object.keys(sym);
+			let mut kk = 0;
+			while (kk < keys.length) {
+				let mut key = keys[kk];
+				let mut item = sym[key];
+				if item.kind == TokenKind.NK_ENUM {
+					let mut jj = 0;
+					while (jj < item.body.length) {
+						let mut child = item.body[jj];
+						if child.name == name_to_resolve {
+							name = item.name;
+							member = name_to_resolve;
+							// break all loops
+							cscope = {parent:null}; kk = keys.length + 1; break;
+						}
+						jj++;
+					};
+				}
+				kk++;
+			};
+			cscope = cscope.parent;
+		};
+	} else {
+		name = current.value;
+		expect(TokenKind.PP_DOT);
+	}
+	expect_identifier();
+	let mut node = {
+		kind: TokenKind.NK_ENUM_EXPRESSION,
+		value: null
+	};
+	// unfold enum
+	let mut resolve = scope.resolve(name);
+	if resolve && resolve.kind == TokenKind.NK_ENUM {
+		let mut ii = 0;
+		let mut body = resolve.body;
+		while (ii < body.length) {
+			let mut child = body[ii];
+			if child.name == member {
+				node.value = child.init;
+				break;
+			}
+			ii++;
+		};
+	}
+	next();
+	return (node);
+};
+fn parse_enum_body() {
+	let mut keys = [];
+	let mut idx = 0;
+	while (peek(TokenKind.TK_IDENTIFIER)) {
+		let mut node = {
+			kind: TokenKind.NK_ENUM_ITEM,
+			name: current.value,
+			init: null
+		};
+		next();
+		if eat(TokenKind.OP_ASS) {
+			if !is_literal(current) {
+				__imports.error("Enum key " + node.name + " can only have numeric value");
+			} else {
+				node.init = parse_literal();
+				idx = node.init.value;
+			}
+		} else {
+			node.init = {value:idx++};
+		}
+		scope.register(node.name, node);
+		keys.push(node);
+		if !eat(TokenKind.PP_COMMA) break;
+	};
+	return (keys);
+};
+fn parse_let_declaration(kind) {
+		next();
+		let mut mutable = false;
+		if eat(TokenKind.KW_MUT) {
+				mutable = true;
+		}
+		expect_identifier();
+		let mut node = {
+				kind: kind,
+				id: current.value,
+				mutable: mutable,
+				init: null
+		};
+		next();
+		scope.register(node.id, node);
+		expect(TokenKind.OP_ASS);
+		node.init = parse_expression();
+		return (node);
+};
+fn parse_const_declaration(kind) {
+		next();
+		expect_identifier();
+		let mut node = {
+				kind: kind,
+				id: current.value,
+				init: null
+		};
+		next();
+		scope.register(node.id, node);
+		expect(TokenKind.OP_ASS);
+		node.init = parse_expression();
+		return (node);
+};
+fn parse_member_expression(parent) {
+	expect(TokenKind.PP_DOT);
+	let mut node = {
+		kind: TokenKind.NK_MEMBER_EXPRESSION,
+		parent: parent,
+		member: parse_expression()
+	};
+	if node.parent.kind == TokenKind.NK_LITERAL && node.member.kind == TokenKind.NK_LITERAL {
+		let mut resolve = scope.resolve(node.parent.value);
+		if resolve && resolve.kind == TokenKind.NK_ENUM {
+			let mut ii = 0;
+			while (ii < resolve.body.length) {
+				let mut child = resolve.body[ii];
+				if node.member.value == child.name {
+					node = {
+						kind: TokenKind.NK_ENUM_EXPRESSION,
+						value: child.init
+					};
+					break;
+				}
+				ii++;
+			};
+		}
+	}
+	return (node);
+};
+fn parse_computed_member_expression(parent) {
+	expect(TokenKind.PP_LBRACK);
+	let mut node = {
+		kind: TokenKind.NK_COMPUTED_MEMBER_EXPRESSION,
+		parent: parent,
+		member: parse_expression()
+	};
+	expect(TokenKind.PP_RBRACK);
+	return (node);
+};
+fn parse_call_expression(id) {
+	let mut node = {
+		kind: TokenKind.NK_CALL_EXPRESSION,
+		callee: id,
+		parameter: parse_call_parameters()
+	};
+	let mut resolve = scope.resolve(id.value);
+	if resolve && resolve.kind == TokenKind.NK_FN {
+		let mut params = resolve.parameter;
+		let mut idx = 0;
+		params.map(fn(item) {
+			let mut param = node.parameter[idx];
+			let mut loc = id.value + "::" + param.value;
+			if item.is_inout {
+				if param.kind != TokenKind.NK_LITERAL {
+					__imports.error("fn " + loc + " is inout and only accepts literals");
+				} else {
+					// now try to trace the variable declaration location as a later pointer
+					let mut resolve = scope.resolve(param.value);
+					if resolve.kind != TokenKind.NK_LET {
+						__imports.error("Passing by reference in " + loc + " only accepts variables right now");
+					} else {
+						// trace as later reference
+						if !resolve.is_later_reference {
+							resolve.is_later_reference = true;
+						}
+					}
+				}
+			}
+			idx++;
+		});
+	}
+	return (node);
+};
+fn parse_call_parameters() {
+	let mut params = [];
+	expect(TokenKind.PP_LPAREN);
+	while (true) {
+		if peek(TokenKind.PP_RPAREN) break;
+		let mut expr = parse_expression();
+		params.push(expr);
+		if !eat(TokenKind.PP_COMMA) break;
+	};
+	expect(TokenKind.PP_RPAREN);
+	return (params);
+};
+fn parse_break() {
+	expect(TokenKind.KW_BREAK);
+	let mut node = {
+		kind: TokenKind.NK_BREAK
+	};
+	return (node);
+};
+fn parse_continue() {
+	expect(TokenKind.KW_CONTINUE);
+	let mut node = {
+		kind: TokenKind.NK_CONTINUE
+	};
+	return (node);
+};
+fn parse_object_expression() {
+	let mut node = {
+		kind: TokenKind.NK_OBJECT_EXPRESSION,
+		properties: []
+	};
+	expect(TokenKind.PP_LBRACE);
+	while (true) {
+		if peek(TokenKind.PP_RBRACE) break;
+		let mut property = {
+			kind: TokenKind.NK_OBJECT_PROPERTY,
+			id: parse_literal(),
+			value: null
+		};
+		expect(TokenKind.PP_COLON);
+		property.value = parse_expression();
+		node.properties.push(property);
+		if !eat(TokenKind.PP_COMMA) break;
+	};
+	expect(TokenKind.PP_RBRACE);
+	return (node);
+};
+fn parse_unary_prefix_expression() {
+	let mut node = {
+		kind: TokenKind.NK_UNARY_PREFIX_EXPRESSION,
+		operator: current.value,
+		value: null
+	};
+	next();
+	node.value = parse_literal();
+	return (node);
+};
+fn parse_unary_postfix_expression(left) {
+	let mut node = {
+		kind: TokenKind.NK_UNARY_POSTFIX_EXPRESSION,
+		operator: current.value,
+		value: left
+	};
+	next();
+	return (node);
+};
+fn parse_binary_expression(left) {
+	let mut node = {
+		kind: TokenKind.NK_BINARY_EXPRESSION,
+		left: left,
+		right: null,
+		operator: current.value
+	};
+	next();
+	node.right = parse_expression();
+	return (node);
+};
+fn parse_infix(left) {
+	if is_binary_operator(current) {
+		return (parse_binary_expression(left));
+	}
+	if is_unary_postfix_operator(current) {
+		return (parse_unary_postfix_expression(left));
+	}
+	if peek(TokenKind.PP_LPAREN) {
+		return (parse_call_expression(left));
+	}
+	if peek(TokenKind.PP_DOT) {
+		return (parse_member_expression(left));
+	}
+	if peek(TokenKind.PP_LBRACK) {
+		return (parse_computed_member_expression(left));
+	}
+	return (left);
+};
+fn parse_prefix() {
+	if is_literal(current) {
+		return (parse_literal());
+	}
+	if peek(TokenKind.PP_LBRACE) {
+		return (parse_object_expression());
+	}
+	if peek(TokenKind.PP_LBRACK) {
+		return (parse_array_expression());
+	}
+	if eat(TokenKind.PP_LPAREN) {
+		let mut node = parse_expression();
+		expect(TokenKind.PP_RPAREN);
+		return (node);
+	}
+	if is_unary_prefix_operator(current) {
+		return (parse_unary_prefix_expression());
+	}
+	return (parse_statement());
+};
+fn parse_array_expression() {
+	expect(TokenKind.PP_LBRACK);
+	let mut node = {
+		kind: TokenKind.NK_ARRAY_EXPRESSION,
+		elements: []
+	};
+	while (true) {
+		if peek(TokenKind.PP_RBRACK) break;
+		let mut element = {
+			kind: TokenKind.NK_ARRAY_ELEMENT,
+			value: parse_expression()
+		};
+		node.elements.push(element);
+		if !eat(TokenKind.PP_COMMA) break;
+	};
+	expect(TokenKind.PP_RBRACK);
+	return (node);
+};
+fn parse_expression() {
+	if peek(TokenKind.KW_BREAK) {
+		return (parse_break());
+	}
+	if peek(TokenKind.KW_CONTINUE) {
+		return (parse_continue());
+	}
+	if peek(TokenKind.PP_DOT) {
+		return (parse_enum_expression());
+	}
+	let mut node = parse_prefix();
+	while (true) {
+		if !current break;
+		let mut expr = parse_infix(node);
+		if expr == null || expr == node break;
+		node = expr;
+	};
+	return (node);
+};
+fn parse_literal() {
+	if peek(TokenKind.TK_STRING) {
+		return (parse_string_literal());
+	}
+	let mut node = {
+		kind: TokenKind.NK_LITERAL,
+		type: current.kind,
+		value: current.value
+	};
+	next();
+	return (node);
+};
+fn parse_string_literal() {
+	let mut node = {
+		kind: TokenKind.NK_STRING_LITERAL,
+		type: current.kind,
+		value: current.value,
+		is_char: current.is_char
+	};
+	next();
+	return (node);
+};
+
+// ## GENERATOR ##
+let mut out = "";
+fn write(str) {
+	out = out + str;
+};
+fn generate(node) {
+	out = "";
+	generate_body(node.body);
+	return (out);
+};
+fn generate_body(body) {
+	let mut ii = 0;
+	while (ii < body.length) {
+		generate_node(body[ii]);
+		ii++;
+		write(";");
+	};
+};
+fn generate_node(node) {
+	let mut kind = node.kind;
+	if kind == TokenKind.NK_FN {
+		write("function ");
+		if node.id write(node.id);
+		write("(");
+		let mut ii = 0;
+		push_scope(node);
+		while (ii < node.parameter.length) {
+			write(node.parameter[ii].value);
+			if ii + 1 < node.parameter.length {
+				write(", ");
+			}
+			ii++;
+		};
+		write(")");
+		write(" { ");
+		generate_body(node.body);
+		write(" } ");
+		pop_scope();
+	} else if kind == TokenKind.NK_LET {
+		let mut is_later_reference = node.is_later_reference;
+		if node.mutable {
+				write("let ");
+		} else {
+				write("const ");
+		}
+		write(node.id);
+		write(" = ");
+		if is_later_reference {
+			write("{");
+			write("$iov:");
+		}
+		generate_node(node.init);
+		if is_later_reference {
+			write("}");
+		}
+	} else if kind == TokenKind.NK_CONST {
+		write("const ");
+		write(node.id);
+		write(" = ");
+		generate_node(node.init);
+	} else if kind == TokenKind.NK_IF {
+		if node.condition {
+			write("if (");
+			generate_node(node.condition);
+			write(")");
+		}
+		write(" { ");
+		push_scope(node.consequent);
+		generate_body(node.consequent);
+		pop_scope();
+		write(" } ");
+		if node.alternate {
+			write("else ");
+			push_scope(node.alternate);
+			generate_node(node.alternate);
+			pop_scope();
+		}
+	} else if kind == TokenKind.NK_RETURN {
+		write("return (");
+		generate_node(node.argument);
+		write(")");
+	} else if kind == TokenKind.NK_WHILE {
+		write("while ");
+		write("(");
+		generate_node(node.condition);
+		write(")");
+		push_scope(node);
+		write(" {");
+		generate_body(node.body);
+		write(" } ");
+		pop_scope();
+	} else if kind == TokenKind.NK_BREAK {
+		write("break");
+		write("");
+	} else if kind == TokenKind.NK_CONTINUE {
+		write("continue");
+		write("");
+	} else if kind == TokenKind.NK_CALL_EXPRESSION {
+		let mut callee = node.callee;
+		let mut resolve = scope.resolve(callee.value);
+		generate_node(callee);
+		write("(");
+		let mut ii = 0;
+		while (ii < node.parameter.length) {
+			// pass identifier by reference
+			if resolve && resolve.parameter[ii].is_inout {
+				write(node.parameter[ii].value);
+			} else {
+				generate_node(node.parameter[ii]);
+			}
+			if ii + 1 < node.parameter.length {
+				write(", ");
+			}
+			ii++;
+		};
+		write(")");
+	} else if kind == TokenKind.NK_BINARY_EXPRESSION {
+		generate_node(node.left);
+		if node.operator == "==" {
+			write(" === ");
+		} else if node.operator == "!=" {
+			write(" !== ");
+		}
+		else {
+			write(node.operator);
+		}
+		generate_node(node.right);
+	} else if kind == TokenKind.NK_MEMBER_EXPRESSION {
+		generate_node(node.parent);
+		write(".");
+		generate_node(node.member);
+	} else if kind == TokenKind.NK_COMPUTED_MEMBER_EXPRESSION {
+		generate_node(node.parent);
+		write("[");
+		generate_node(node.member);
+		write("]");
+	} else if kind == TokenKind.NK_UNARY_PREFIX_EXPRESSION {
+		if node.operator == "new" {
+			write(node.operator);
+			write(" ");
+		}
+		else write(node.operator);
+		generate_node(node.value);
+	} else if kind == TokenKind.NK_UNARY_POSTFIX_EXPRESSION {
+		generate_node(node.value);
+		write(node.operator);
+	} else if kind == TokenKind.NK_OBJECT_EXPRESSION {
+		write("{");
+		let mut ii = 0;
+		while (ii < node.properties.length) {
+			let mut property = node.properties[ii];
+			generate_node(property.id);
+			write(": ");
+			generate_node(property.value);
+			if ii + 1 < node.properties.length {
+				write(", ");
+			}
+			ii++;
+		};
+		write(" }");
+	} else if kind == TokenKind.NK_ARRAY_EXPRESSION {
+		write("[");
+		let mut ii = 0;
+		while (ii < node.elements.length) {
+			let mut element = node.elements[ii];
+			generate_node(element.value);
+			if ii + 1 < node.elements.length {
+				write(", ");
+			}
+			ii++;
+		};
+		write("]");
+	} else if kind == TokenKind.NK_LITERAL {
+		let mut resolve = scope.resolve(node.value);
+		write(node.value);
+		if resolve {
+			if resolve.is_later_reference {
+				write(".$iov");
+			} else if resolve.is_parameter && resolve.is_inout {
+				write(".$iov");
+			}
+		}
+	} else if kind == TokenKind.NK_STRING_LITERAL {
+		let mut is_char = node.is_char;
+		if is_char write('"');
+		else write("'");
+		write(node.value);
+		if is_char write('"');
+		else write("'");
+	} else if kind == TokenKind.NK_EXPORT {
+		let mut init = node.init;
+		write("export ");
+		// write(init.id);
+		// write(" = ");
+		if init.kind == TokenKind.NK_FN {
+			generate_node(init);
+		} else if init.kind == TokenKind.NK_LET || init.kind == TokenKind.NK_CONST {
+			generate_node(init.init);
+		}
+		else {
+			__imports.error("Cannot export node kind " + init.kind + "!");
+		}
+	} else if kind == TokenKind.NK_ENUM {
+		let mut name = node.name;
+		let mut body = node.body;
+		write("let ");
+		write(name);
+		write(";");
+		write("(function(");
+		write(name);
+		write(") {");
+		// body
+		let mut ii = 0;
+		while (ii < body.length) {
+			let mut child = body[ii];
+			write(name);
+			write("[");
+			write(name);
+			write("[");
+			write("'" + child.name + "'");
+			write("]");
+			write(" = ");
+			write(child.init.value);
+			write("] = ");
+			write("'" + child.name + "'");
+			write(";");
+			ii++;
+		};
+		write("})(");
+		write(name);
+		write(" || (");
+		write(name);
+		write(" = {})");
+		write(")");
+	} else if kind == TokenKind.NK_ENUM_EXPRESSION {
+		write(node.value.value);
+	}
+	else {
+		__imports.error("Unknown node kind " + node.kind + "!");
+	}
+};
+
+let mut __imports = null;
+pub fn compile(str, imports) {
+	__imports = imports;
+	let mut tokens = scan(str);
+	let mut ast = parse(tokens);
+	return (generate(ast));
+};

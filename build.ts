@@ -1,10 +1,8 @@
-import vm from "node:vm";
-
-let stub_path = "./bin/stub.ts";
+const stub_path = "./bin/stub.ts";
 const stub = await import(stub_path);
 import stdlib from "./stdlib/index.ts";
 
-const input = await Deno.readTextFile("./src/main.js2");
+const input = await Deno.readTextFile("./src/main.ss");
 
 console.log("Recompiling..");
 
