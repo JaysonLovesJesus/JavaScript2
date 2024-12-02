@@ -458,14 +458,14 @@ fn next() {
 };
 fn expect(kind) {
 	if current.kind != kind {
-		__imports.error("Expected " + kind + " but got " + current.kind + " in " + current.line + ":" + current.column);
+		console.error("Expected " + kind + " but got " + current.kind + " in " + current.line + ":" + current.column);
 	} else {
 		next();
 	}
 };
 fn expect_identifier() {
 	if current.kind != TokenKind.TK_IDENTIFIER {
-		__imports.error("Expected " + TokenKind.TK_IDENTIFIER + ":identifier but got " + current.kind + ":" + current.value);
+		console.error("Expected " + TokenKind.TK_IDENTIFIER + ":identifier but got " + current.kind + ":" + current.value);
 	}
 };
 fn eat(kind) {
@@ -507,7 +507,7 @@ fn parse_statement() {
 	} else {
 		node = parse_expression();
 		if node == null {
-			__imports.error("Unknown node kind " + current.value + " in " + current.line + ":" + current.column);
+			console.error("Unknown node kind " + current.value + " in " + current.line + ":" + current.column);
 		}
 	}
 	eat(TokenKind.PP_SEMIC);
@@ -724,7 +724,7 @@ fn parse_enum_body() {
 		next();
 		if eat(TokenKind.OP_ASS) {
 			if !is_literal(current) {
-				__imports.error("Enum key " + node.name + " can only have numeric value");
+				console.error("Enum key " + node.name + " can only have numeric value");
 			} else {
 				node.init = parse_literal();
 				idx = node.init.value;
@@ -822,12 +822,12 @@ fn parse_call_expression(id) {
 			let mut loc = id.value + "::" + param.value;
 			if item.is_inout {
 				if param.kind != TokenKind.NK_LITERAL {
-					__imports.error("fn " + loc + " is inout and only accepts literals");
+					console.error("fn " + loc + " is inout and only accepts literals");
 				} else {
 					// now try to trace the variable declaration location as a later pointer
 					let mut resolve = scope.resolve(param.value);
 					if resolve.kind != TokenKind.NK_LET {
-						__imports.error("Passing by reference in " + loc + " only accepts variables right now");
+						console.error("Passing by reference in " + loc + " only accepts variables right now");
 					} else {
 						// trace as later reference
 						if !resolve.is_later_reference {
@@ -1216,7 +1216,7 @@ fn generate_node(node) {
 			generate_node(init.init);
 		}
 		else {
-			__imports.error("Cannot export node kind " + init.kind + "!");
+			console.error("Cannot export node kind " + init.kind + "!");
 		}
 	} else if kind == TokenKind.NK_ENUM {
 		let mut name = node.name;
@@ -1254,13 +1254,11 @@ fn generate_node(node) {
 		write(node.value.value);
 	}
 	else {
-		__imports.error("Unknown node kind " + node.kind + "!");
+		console.error("Unknown node kind " + node.kind + "!");
 	}
 };
 
-let mut __imports = null;
 pub fn compile(str, imports) {
-	__imports = imports;
 	let mut tokens = scan(str);
 	let mut ast = parse(tokens);
 	return (generate(ast));
