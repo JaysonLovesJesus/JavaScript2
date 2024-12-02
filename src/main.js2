@@ -1221,44 +1221,25 @@ fn generate_node(node) {
 	} else if kind == TokenKind.NK_ENUM {
 		let mut name = node.name;
 		let mut body = node.body;
-		write("let ");
+		write("enum ");
 		write(name);
-		write(";");
-		write("(function(");
-		write(name);
-		write(") {");
+		write(" {");
 		// body
 		let mut ii = 0;
 		while (ii < body.length) {
 			let mut child = body[ii];
-			write(name);
-			write("[");
-			write(name);
-			write("[");
-			write("'" + child.name + "'");
-			write("]");
-			write(" = ");
-			write(child.init.value);
-			write("] = ");
-			write("'" + child.name + "'");
-			write(";");
+			write(name+",");
 			ii++;
 		};
-		write("})(");
-		write(name);
-		write(" || (");
-		write(name);
-		write(" = {})");
-		write(")");
+		write("}");
 	} else if kind == TokenKind.NK_ENUM_EXPRESSION {
 		write(node.value.value);
-	}
-	else {
+	} else {
 		console.error("Unknown node kind " + node.kind + "!");
 	}
 };
 
-pub fn compile(str, imports) {
+pub fn compile(str) {
 	let mut tokens = scan(str);
 	let mut ast = parse(tokens);
 	return (generate(ast));
