@@ -13,5 +13,8 @@
     - [ ] Zig-like `catch` keyword
     - [ ] unsafe blocks
 - [ ] Implement type system
+    - [ ] Typecheck vs transpile to TS
 - [ ] Constant inlining
 - [ ] Implement a useful error system
+- [ ] Improve generation to output formatted typescript
+- [ ] Modularize the code a little
