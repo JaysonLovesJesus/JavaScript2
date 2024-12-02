@@ -14,6 +14,7 @@ enum TokenKind {
 	KW_BREAK,
 	KW_CONTINUE,
 	KW_RETURN,
+	KW_MATCH,
 
 	// Punctuators
 	PP_LPAREN,

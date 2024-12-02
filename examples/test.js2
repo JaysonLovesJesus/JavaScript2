@@ -20,6 +20,6 @@ pub fn main() {
 }
 
 // Function to calculate the area of a circle
-fn calculateCircleArea(radius: number) -> number {
+fn calculateCircleArea(radius: number): number {
     return PI * radius * radius;
 }
