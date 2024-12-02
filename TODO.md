@@ -1,5 +1,6 @@
 Backlog
-- [ ] Make README
+- [ ] Add pattern matching
+- [ ] Improve README
 - [ ] Add payloads to enums
 - [ ] Add wildcard underscore
 - [ ] Add pipe operator
@@ -15,8 +16,7 @@ Backlog
 - [ ] Improve generation to output formatted typescript
 - [ ] Modularize the code a little
 
-In progress
-- [ ] Add pattern matching
+In Progress
 - [ ] Implement type system
     - [ ] Typecheck vs transpile to TS
 - [ ] Constant inlining
